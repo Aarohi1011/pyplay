@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Python-Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="glass-nav">
+    <div class="logo">
+        <span class="logo-icon">🐍</span>
+        <span class="logo-text">Python<span class="highlight">Master</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-item">📊 Dashboard</a>
+        <a href="/game" class="nav-item">🎮 Arcade (Word Scramble)</a>
+        <a href="/logout" class="nav-button">Logout</a>
+    </div>
+</nav>
+
+<div class="dashboard">
+
+    <div class="welcome">
+        <div>
+            <h1>Welcome, {{ username }}! 👋</h1>
+            <p class="subtitle">
+                Track your daily progress, conquer core Python concepts, and put your skills to the test in the arcade!
+            </p>
+        </div>
+
+        <div class="progress-box">
+            <div class="progress-header">
+                <span>Course Mastery</span>
+                <strong>{{ progress }}%</strong>
+            </div>
+            <div class="progress">
+                <div style="width: {{ progress }}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arcade Banner Feature -->
+    <div class="game-banner" style="margin-bottom: 35px;">
+        <div>
+            <span class="badge-hot" style="margin-bottom: 8px; display: inline-block;">NEW MINI-GAME</span>
+            <h2>🧩 Python Word Scramble & Code Detective</h2>
+            <p>Unscramble essential Python keywords, solve code output puzzles, and sharpen your programming reflexes!</p>
+        </div>
+        <a href="/game" class="primary-button play-btn">Play Arcade Now 🎮</a>
+    </div>
+
+    <h2 class="section-title">Your 7-Day Python Curriculum</h2>
+
+    <div class="days">
+        {% for day_num, day_info in days.items() %}
+            {% set is_done = day_num in completed %}
+            <div class="day-card">
+                <span>DAY {{ day_num }}</span>
+                <h3>{{ day_info.title }}</h3>
+
+                {% if is_done %}
+                    <p class="completed">
+                        <span style="background: #dcfce7; color: #16a34a; padding: 3px 8px; border-radius: 4px; font-weight: 700;">
+                            &#10003; Completed
+                        </span>
+                    </p>
+                {% else %}
+                    <p class="not-started">
+                        <span style="background: #f1f5f9; color: #64748b; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
+                            ⏳ In Progress
+                        </span>
+                    </p>
+                {% endif %}
+
+                <div style="display: flex; gap: 8px;">
+                    <a href="/day/{{ day_num }}" class="secondary-button" style="flex: 1; text-align: center;">
+                        {% if is_done %}Review Lesson{% else %}Start Lesson &rarr;{% endif %}
+                    </a>
+                    {% if is_done %}
+                    <a href="/quiz/{{ day_num }}" class="secondary-button" title="Retake Quiz" style="padding: 11px 14px;">
+                        📝
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+</body>
+</html>

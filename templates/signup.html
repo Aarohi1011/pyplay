@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - PythonPath</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav class="glass-nav">
+    <div class="logo">
+        <span class="logo-icon">🐍</span>
+        <span class="logo-text">Python<span class="highlight">Path</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="nav-item">Home</a>
+        <a href="/login" class="nav-button">Sign In</a>
+    </div>
+</nav>
+
+<div class="auth-page">
+
+    <div class="auth-box">
+
+        <h1>Create Your Account 🚀</h1>
+
+        <p>Create your free learner account and start building with Python today.</p>
+
+        {% if error %}
+            <div class="alert-message alert-error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="/signup">
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Full Name or Username"
+                value="{{ username or '' }}"
+                required
+            >
+
+            <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value="{{ email or '' }}"
+                required
+            >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Create Password"
+                required
+            >
+
+            <button type="submit" class="primary-button">
+                Start Learning Python &rarr;
+            </button>
+
+        </form>
+
+        <p style="text-align: center; margin-bottom: 0; font-size: 14px;">
+            Already have an account? <a href="/login">Sign In here</a>
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>

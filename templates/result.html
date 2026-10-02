@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Result - Day {{ day_number }} - PythonPath</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<!-- Confetti Canvas -->
+<canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+<nav class="glass-nav">
+    <div class="logo">
+        <span class="logo-icon">🐍</span>
+        <span class="logo-text">Python<span class="highlight">Path</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/day/{{ day_number }}" class="nav-item">Review Lesson</a>
+        <a href="/dashboard" class="nav-item">Dashboard</a>
+    </div>
+</nav>
+
+<div class="result-page">
+
+    <div class="result-box">
+
+        <p class="small-title">
+            DAY {{ day_number }} QUIZ RESULT
+        </p>
+
+        {% set percentage = ((score / total) * 100) | int %}
+
+        <div style="font-size: 58px; margin: 10px 0;">
+            {% if score == total %}🏆{% elif score >= 3 %}🎉{% else %}💡{% endif %}
+        </div>
+
+        <h1 style="font-size: 44px; margin-bottom: 5px;">{{ score }} / {{ total }}</h1>
+
+        <div style="font-size: 17px; font-weight: 700; color: var(--text-muted); margin-bottom: 24px;">
+            Accuracy: <strong style="color: var(--primary);">{{ percentage }}%</strong>
+        </div>
+
+        {% if score == total %}
+            <div class="alert-message alert-success" style="text-align: center;">
+                🌟 <b>Mastery Achieved!</b> Perfect score! You have completely mastered Day {{ day_number }}. Outstanding problem-solving!
+            </div>
+        {% elif score >= 3 %}
+            <div class="alert-message alert-success" style="text-align: center;">
+                🎉 <b>Great Job!</b> You passed! Day {{ day_number }} is now marked as <b>Completed</b> on your dashboard.
+            </div>
+        {% else %}
+            <div class="alert-message alert-error" style="text-align: center;">
+                📖 <b>Keep practicing!</b> You need at least 3 out of 5 to pass. Review the lesson and try again!
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 12px;">
+            {% if day_number < 7 and score >= 3 %}
+                <a href="/day/{{ day_number + 1 }}" class="primary-button" style="text-align: center;">
+                    Continue to Day {{ day_number + 1 }} &rarr;
+                </a>
+            {% endif %}
+
+            <a href="/game" class="secondary-button" style="text-align: center; border-color: #38bdf8; color: #0284c7;">
+                🧩 Play Word Scramble Arcade
+            </a>
+
+            <a href="/quiz/{{ day_number }}" class="secondary-button" style="text-align: center;">
+                Retake Quiz
+            </a>
+
+            <a href="/dashboard" class="secondary-button" style="text-align: center;">
+                Back to Dashboard
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+// Confetti on passing score
+{% if score >= 3 %}
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let particles = [];
+for (let i = 0; i < 70; i++) {
+    particles.push({
+        x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+        y: canvas.height / 3 + (Math.random() - 0.5) * 100,
+        r: Math.random() * 6 + 4,
+        color: ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f43f5e'][Math.floor(Math.random() * 5)],
+        vx: (Math.random() - 0.5) * 10,
+        vy: Math.random() * -8 - 4
+    });
+}
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.2;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    particles = particles.filter(p => p.y < canvas.height + 20);
+    if (particles.length > 0) requestAnimationFrame(animate);
+}
+animate();
+{% endif %}
+</script>
+
+</body>
+</html>

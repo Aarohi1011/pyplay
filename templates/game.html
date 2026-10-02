@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Arcade - Word Scramble & Code Detective - PythonPath</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<!-- Confetti Canvas -->
+<canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+<nav class="glass-nav">
+    <div class="logo">
+        <span class="logo-icon">🐍</span>
+        <span class="logo-text">Python<span class="highlight">Path</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-item">📊 Dashboard</a>
+        <a href="/game" class="nav-item">🎮 Arcade (Word Scramble)</a>
+        <a href="/logout" class="nav-button">Logout</a>
+    </div>
+</nav>
+
+<div class="dashboard game-dashboard">
+
+    <!-- Top Hero Banner (matches Dashboard .welcome card style) -->
+    <div class="welcome" style="margin-bottom: 25px;">
+        <div>
+            <span class="badge-hot" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); font-weight: 700; margin-bottom: 10px; display: inline-block;">⚡ PYTHON ARCADE</span>
+            <h1>Word Scramble & Code Detective</h1>
+            <p class="subtitle" style="max-width: 540px;">
+                Master core Python keywords and predict execution outputs through interactive challenges!
+            </p>
+        </div>
+
+        <!-- Global Arcade Stats (matches Dashboard .progress-box) -->
+        <div class="game-stats-cluster">
+            <div class="game-stat-card">
+                <span class="stat-icon">⭐</span>
+                <div>
+                    <span class="stat-label">Total Score</span>
+                    <strong id="globalScore" class="stat-value">0</strong>
+                </div>
+            </div>
+            <div class="game-stat-card">
+                <span class="stat-icon">🔥</span>
+                <div>
+                    <span class="stat-label">Hot Streak</span>
+                    <strong id="globalStreak" class="stat-value">0</strong>
+                </div>
+            </div>
+            <div class="game-stat-card">
+                <span class="stat-icon">🏆</span>
+                <div>
+                    <span class="stat-label">Solved</span>
+                    <strong id="wordsSolvedCount" class="stat-value">0</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Selector Tabs (uniform segmented control) -->
+    <div class="game-mode-tabs">
+        <button id="tabScramble" class="mode-tab active" onclick="switchGameMode('scramble')">
+            <span class="tab-emoji">🧩</span>
+            <span class="tab-text">Python Word Scramble</span>
+            <span class="badge-hot">Popular</span>
+        </button>
+        <button id="tabDetective" class="mode-tab" onclick="switchGameMode('detective')">
+            <span class="tab-emoji">🕵️‍♂️</span>
+            <span class="tab-text">Code Detective</span>
+            <span class="badge-pill">Quiz Mode</span>
+        </button>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODE 1: WORD SCRAMBLE GAME -->
+    <!-- ========================================================= -->
+    <div id="scrambleSection" class="arcade-section active">
+
+        <div class="scramble-panel game-card">
+            
+            <div class="panel-header">
+                <div class="level-indicator">
+                    <span class="category-chip" id="scrambleCategory">Python Keyword</span>
+                    <span class="word-counter" id="wordCounter">Word 1 of 18</span>
+                </div>
+                <div class="timer-badge" id="scrambleTimer">
+                    ⏱️ <span id="timerSeconds">30</span>s
+                </div>
+            </div>
+
+            <!-- Clue Card -->
+            <div class="clue-card">
+                <div class="clue-tag">💡 CLUE / DEFINITION</div>
+                <p id="scrambleHint" class="clue-text">Loading clue...</p>
+            </div>
+
+            <!-- Answer Slots -->
+            <div class="scramble-slots-area">
+                <div class="slots-container" id="answerSlotsContainer">
+                    <!-- Populated dynamically -->
+                </div>
+                <div id="scrambleInputHelp" class="input-helper">
+                    Click letter tiles below or type letters on your keyboard! Press <b>Enter</b> to submit, <b>Backspace</b> to undo.
+                </div>
+            </div>
+
+            <!-- Scrambled Letter Tiles -->
+            <div class="tiles-rack" id="scrambleTilesRack">
+                <!-- Letter chips rendered here -->
+            </div>
+
+            <!-- Controls & Action Buttons -->
+            <div class="scramble-actions-bar">
+                <button class="secondary-button" onclick="shuffleCurrentWord()" title="Shuffle letters">
+                    <span>🔀</span> Shuffle
+                </button>
+                <button class="secondary-button" onclick="useHint()" title="Reveal a letter">
+                    <span>💡</span> Hint (-20 pts)
+                </button>
+                <button class="secondary-button" onclick="clearAnswer()" title="Clear answer slots">
+                    <span>↩️</span> Clear
+                </button>
+                <button class="primary-button submit-btn" onclick="submitScrambleWord()">
+                    <span>🚀</span> Submit Word (Enter)
+                </button>
+                <button class="secondary-button skip-btn" onclick="skipScrambleWord()" title="Skip this word">
+                    <span>⏭️</span> Skip
+                </button>
+            </div>
+
+            <!-- Message Alert -->
+            <div id="scrambleFeedback" class="arcade-feedback" style="display: none;"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- MODE 2: CODE DETECTIVE CHALLENGE -->
+    <!-- ========================================================= -->
+    <div id="detectiveSection" class="arcade-section">
+
+        <div class="detective-panel game-card">
+
+            <!-- Detective Progress -->
+            <div class="detective-header">
+                <div>
+                    <span id="detectiveQuestionNum" class="detective-step">Challenge 1 of 10</span>
+                    <h2 class="detective-title" id="detectivePrompt">What will this Python snippet output?</h2>
+                </div>
+                <span id="detectiveTopic" class="topic-pill">Lists & Data</span>
+            </div>
+
+            <div class="detective-progress-line">
+                <div id="detectiveProgressFill" class="progress-fill" style="width: 10%;"></div>
+            </div>
+
+            <!-- Modern Terminal Window -->
+            <div class="code-terminal-window">
+                <div class="terminal-topbar">
+                    <div class="terminal-dots">
+                        <span class="term-dot dot-close"></span>
+                        <span class="term-dot dot-min"></span>
+                        <span class="term-dot dot-max"></span>
+                    </div>
+                    <span class="terminal-filename">challenge.py</span>
+                    <button class="copy-code-btn" onclick="copySnippetCode()">📋 Copy</button>
+                </div>
+                <pre class="terminal-code-body"><code id="detectiveSnippet"># Code loading...</code></pre>
+            </div>
+
+            <!-- Detective Options -->
+            <div id="detectiveOptions" class="detective-options-grid">
+                <!-- Buttons injected dynamically -->
+            </div>
+
+            <!-- Detective Feedback -->
+            <div id="detectiveFeedback" class="arcade-feedback" style="display: none;">
+                <div id="detectiveFeedbackContent"></div>
+                <button id="detectiveNextBtn" class="primary-button" style="margin-top: 15px;" onclick="nextDetectiveChallenge()">
+                    Next Challenge &rarr;
+                </button>
+            </div>
+
+            <!-- Detective Game Over Card -->
+            <div id="detectiveGameOver" class="detective-gameover" style="display: none;">
+                <div class="celebration-trophy" id="detectiveTrophy">🏆</div>
+                <h2 id="detectiveEndTitle">Master Python Detective!</h2>
+                <p id="detectiveEndMsg">Outstanding problem solving skills!</p>
+                <div class="score-summary-pill">
+                    Final Score: <strong id="detectiveFinalScore">0</strong> / 100
+                </div>
+                <div class="gameover-actions">
+                    <button class="primary-button" onclick="restartDetectiveGame()">🔄 Play Again</button>
+                    <button class="secondary-button" onclick="switchGameMode('scramble')">🧩 Try Word Scramble</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Sound & Logic Script -->
+<script>
+// ==========================================
+// SOUND SYNTHESIZER (Web Audio API)
+// ==========================================
+class SoundFX {
+    constructor() {
+        this.ctx = null;
+    }
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+        }
+    }
+    playTone(freq, type = 'sine', duration = 0.15, vol = 0.15) {
+        try {
+            this.init();
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+    }
+    click() {
+        this.playTone(520, 'sine', 0.08, 0.05);
+    }
+    correct() {
+        this.playTone(587.33, 'triangle', 0.1, 0.15); // D5
+        setTimeout(() => this.playTone(880, 'triangle', 0.2, 0.18), 100); // A5
+    }
+    wrong() {
+        this.playTone(220, 'sawtooth', 0.25, 0.12);
+    }
+    hint() {
+        this.playTone(740, 'sine', 0.15, 0.1);
+    }
+}
+const sfx = new SoundFX();
+
+// ==========================================
+// CANVAS CONFETTI CELEBRATION
+// ==========================================
+
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+let confettiParticles = [];
+let confettiAnimationId = null;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function triggerConfetti(particleCount = 60) {
+    const colors = ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f43f5e', '#a855f7'];
+    for (let i = 0; i < particleCount; i++) {
+        confettiParticles.push({
+            x: canvas.width / 2 + (Math.random() - 0.5) * 300,
+            y: canvas.height / 3 + (Math.random() - 0.5) * 100,
+            r: Math.random() * 6 + 4,
+            d: Math.random() * particleCount,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            tilt: Math.floor(Math.random() * 10) - 10,
+            tiltAngleInc: (Math.random() * 0.07) + 0.05,
+            tiltAngle: 0,
+            vx: (Math.random() - 0.5) * 12,
+            vy: Math.random() * -10 - 4
+        });
+    }
+    if (!confettiAnimationId) {
+        animateConfetti();
+    }
+}
+
+function animateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < confettiParticles.length; i++) {
+        let p = confettiParticles[i];
+        p.tiltAngle += p.tiltAngleInc;
+        p.y += (Math.cos(p.d) + 3 + p.r / 2) / 1.5;
+        p.x += Math.sin(p.d) * 2 + p.vx * 0.3;
+        p.tilt = Math.sin(p.tiltAngle - (i / 3)) * 15;
+
+        ctx.beginPath();
+        ctx.lineWidth = p.r / 2;
+        ctx.strokeStyle = p.color;
+        ctx.moveTo(p.x + p.tilt + (p.r / 4), p.y);
+        ctx.lineTo(p.x + p.tilt, p.y + p.tilt + (p.r / 4));
+        ctx.stroke();
+
+        // Friction on horizontal velocity
+        p.vx *= 0.98;
+    }
+
+    confettiParticles = confettiParticles.filter(p => p.y < canvas.height + 20);
+
+    if (confettiParticles.length > 0) {
+        confettiAnimationId = requestAnimationFrame(animateConfetti);
+    } else {
+        cancelAnimationFrame(confettiAnimationId);
+        confettiAnimationId = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+// ==========================================
+// GLOBAL STATS & MODE SWITCHING
+// ==========================================
+let totalArcadeScore = 0;
+let arcadeStreak = 0;
+let wordsSolvedTotal = 0;
+
+function updateGlobalStats(pointsToAdd = 0, streakHit = true) {
+    totalArcadeScore += pointsToAdd;
+    if (totalArcadeScore < 0) totalArcadeScore = 0;
+    if (streakHit) {
+        arcadeStreak++;
+    } else {
+        arcadeStreak = 0;
+    }
+    document.getElementById('globalScore').innerText = totalArcadeScore;
+    document.getElementById('globalStreak').innerText = arcadeStreak;
+    document.getElementById('wordsSolvedCount').innerText = wordsSolvedTotal;
+}
+
+function switchGameMode(mode) {
+    sfx.click();
+    const tabScramble = document.getElementById('tabScramble');
+    const tabDetective = document.getElementById('tabDetective');
+    const secScramble = document.getElementById('scrambleSection');
+    const secDetective = document.getElementById('detectiveSection');
+
+    if (mode === 'scramble') {
+        tabScramble.classList.add('active');
+        tabDetective.classList.remove('active');
+        secScramble.classList.add('active');
+        secDetective.classList.remove('active');
+    } else {
+        tabDetective.classList.add('active');
+        tabScramble.classList.remove('active');
+        secDetective.classList.add('active');
+        secScramble.classList.remove('active');
+    }
+}
+
+// ==========================================
+// WORD SCRAMBLE GAME ENGINE
+// ==========================================
+const scrambleVocabulary = [
+    {
+        word: "VARIABLE",
+        category: "Fundamentals",
+        hint: "A named memory container used to store numbers, strings, or data values."
+    },
+    {
+        word: "BOOLEAN",
+        category: "Data Types",
+        hint: "A logical data type that evaluates to only True or False."
+    },
+    {
+        word: "FUNCTION",
+        category: "Modular Code",
+        hint: "A reusable block of code defined with the 'def' keyword."
+    },
+    {
+        word: "DICTIONARY",
+        category: "Collections",
+        hint: "A collection of key:value pairs enclosed in curly braces { }."
+    },
+    {
+        word: "INTEGER",
+        category: "Data Types",
+        hint: "A whole number in Python without any decimal point (int)."
+    },
+    {
+        word: "PANDAS",
+        category: "Data Science",
+        hint: "The popular Python library used for DataFrames and spreadsheet-like data analysis."
+    },
+    {
+        word: "NUMPY",
+        category: "Scientific Python",
+        hint: "Fundamental Python package for fast multi-dimensional numerical array computing."
+    },
+    {
+        word: "LAMBDA",
+        category: "Advanced Functions",
+        hint: "An anonymous, small inline function defined without the def keyword."
+    },
+    {
+        word: "TUPLE",
+        category: "Collections",
+        hint: "An ordered and immutable collection wrapped in parentheses ( )."
+    },
+    {
+        word: "CONDITION",
+        category: "Control Flow",
+        hint: "Logic checked by if, elif, and else statements to direct program execution."
+    },
+    {
+        word: "RECURSION",
+        category: "Algorithms",
+        hint: "A programming technique where a function calls itself to solve smaller subproblems."
+    },
+    {
+        word: "OPERATOR",
+        category: "Syntax",
+        hint: "Symbols like +, -, *, //, and % used to carry out mathematical and logical calculations."
+    },
+    {
+        word: "SLICING",
+        category: "Sequences",
+        hint: "Extracting a sub-portion of a list or string using colon notation like my_list[1:4]."
+    },
+    {
+        word: "INDENTATION",
+        category: "Python Rule",
+        hint: "Whitespace (4 spaces) used instead of curly braces to define code blocks."
+    }
+];
+
+let scrambleIndex = 0;
+let currentScrambleWord = "";
+let currentScrambleObj = null;
+let scrambledLetters = []; // array of { id, char, used }
+let selectedLetters = [];  // array of { id, char }
+let scrambleTimerInterval = null;
+let scrambleTimeLeft = 35;
+let hintUsedOnCurrent = false;
+
+function shuffleArray(arr) {
+    const array = [...arr];
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function loadScrambleWord() {
+    clearInterval(scrambleTimerInterval);
+    hintUsedOnCurrent = false;
+    scrambleTimeLeft = 35;
+    document.getElementById('timerSeconds').innerText = scrambleTimeLeft;
+
+    currentScrambleObj = scrambleVocabulary[scrambleIndex];
+    currentScrambleWord = currentScrambleObj.word.toUpperCase();
+
+    document.getElementById('scrambleCategory').innerText = currentScrambleObj.category;
+    document.getElementById('scrambleHint').innerText = currentScrambleObj.hint;
+    document.getElementById('wordCounter').innerText = `Word ${scrambleIndex + 1} of ${scrambleVocabulary.length}`;
+
+    // Create scrambled tiles
+    let chars = currentScrambleWord.split('');
+    let shuffled = shuffleArray(chars);
+    // ensure it's not identical to original
+    let attempts = 0;
+    while (shuffled.join('') === currentScrambleWord && chars.length > 2 && attempts < 10) {
+        shuffled = shuffleArray(chars);
+        attempts++;
+    }
+
+    scrambledLetters = shuffled.map((ch, idx) => ({
+        id: 'tile-' + idx + '-' + ch,
+        char: ch,
+        used: false
+    }));
+    selectedLetters = [];
+
+    renderScrambleSlots();
+    renderScrambleTiles();
+    hideFeedback('scrambleFeedback');
+
+    // Timer start
+    scrambleTimerInterval = setInterval(() => {
+        scrambleTimeLeft--;
+        document.getElementById('timerSeconds').innerText = scrambleTimeLeft;
+        if (scrambleTimeLeft <= 0) {
+            clearInterval(scrambleTimerInterval);
+            sfx.wrong();
+            showFeedback('scrambleFeedback', `⏰ Time's up! The word was <strong>${currentScrambleWord}</strong>. Moving to next word...`, 'warning');
+            setTimeout(skipScrambleWord, 2200);
+        }
+    }, 1000);
+}
+
+function renderScrambleSlots() {
+    const container = document.getElementById('answerSlotsContainer');
+    container.innerHTML = '';
+
+    for (let i = 0; i < currentScrambleWord.length; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'answer-slot';
+        if (selectedLetters[i]) {
+            slot.innerText = selectedLetters[i].char;
+            slot.classList.add('filled');
+            const letterObj = selectedLetters[i];
+            slot.onclick = () => {
+                sfx.click();
+                unselectLetter(letterObj);
+            };
+        } else {
+            slot.innerText = '';
+        }
+        container.appendChild(slot);
+    }
+}
+
+function renderScrambleTiles() {
+    const rack = document.getElementById('scrambleTilesRack');
+    rack.innerHTML = '';
+
+    scrambledLetters.forEach(tile => {
+        const btn = document.createElement('button');
+        btn.className = 'letter-tile' + (tile.used ? ' used' : '');
+        btn.innerText = tile.char;
+        btn.disabled = tile.used;
+        btn.onclick = () => {
+            if (!tile.used) {
+                sfx.click();
+                selectLetter(tile);
+            }
+        };
+        rack.appendChild(btn);
+    });
+}
+
+function selectLetter(tile) {
+    if (selectedLetters.length >= currentScrambleWord.length) return;
+    tile.used = true;
+    selectedLetters.push(tile);
+    renderScrambleSlots();
+    renderScrambleTiles();
+
+    // Auto submit if complete
+    if (selectedLetters.length === currentScrambleWord.length) {
+        checkScrambleSolution();
+    }
+}
+
+function unselectLetter(letterObj) {
+    const idx = selectedLetters.findIndex(l => l.id === letterObj.id);
+    if (idx !== -1) {
+        selectedLetters.splice(idx, 1);
+        const originalTile = scrambledLetters.find(t => t.id === letterObj.id);
+        if (originalTile) originalTile.used = false;
+        renderScrambleSlots();
+        renderScrambleTiles();
+    }
+}
+
+function clearAnswer() {
+    sfx.click();
+    selectedLetters = [];
+    scrambledLetters.forEach(t => t.used = false);
+    renderScrambleSlots();
+    renderScrambleTiles();
+}
+
+function shuffleCurrentWord() {
+    sfx.click();
+    // Only reorder currently unused tiles
+    const unusedTiles = scrambledLetters.filter(t => !t.used);
+    const shuffledChars = shuffleArray(unusedTiles.map(t => t.char));
+    unusedTiles.forEach((tile, i) => {
+        tile.char = shuffledChars[i];
+    });
+    renderScrambleTiles();
+}
+
+function useHint() {
+    if (hintUsedOnCurrent) {
+        showFeedback('scrambleFeedback', '💡 Hint already applied for this round!', 'info');
+        return;
+    }
+    sfx.hint();
+    hintUsedOnCurrent = true;
+
+    // Find first letter index that is incorrect or missing
+    let targetChar = currentScrambleWord[0];
+    showFeedback('scrambleFeedback', `💡 Clue Alert: The word begins with the letter <strong>'${targetChar}'</strong> and has <strong>${currentScrambleWord.length}</strong> letters!`, 'info');
+    totalArcadeScore = Math.max(0, totalArcadeScore - 20);
+    document.getElementById('globalScore').innerText = totalArcadeScore;
+}
+
+function checkScrambleSolution() {
+    const userAttempt = selectedLetters.map(l => l.char).join('');
+    if (userAttempt === currentScrambleWord) {
+        clearInterval(scrambleTimerInterval);
+        sfx.correct();
+        triggerConfetti(70);
+
+        wordsSolvedTotal++;
+        const points = hintUsedOnCurrent ? 60 : 100;
+        updateGlobalStats(points, true);
+
+        showFeedback('scrambleFeedback', `🎉 Bravo! You cracked <strong>${currentScrambleWord}</strong>! (+${points} pts)`, 'success');
+
+        setTimeout(() => {
+            scrambleIndex = (scrambleIndex + 1) % scrambleVocabulary.length;
+            loadScrambleWord();
+        }, 1600);
+    } else {
+        sfx.wrong();
+        updateGlobalStats(0, false);
+        showFeedback('scrambleFeedback', `❌ Not quite! That spells <em>${userAttempt}</em>. Try rearranging the tiles!`, 'error');
+        // Gentle shake on slots
+        const slots = document.getElementById('answerSlotsContainer');
+        slots.classList.add('shake');
+        setTimeout(() => slots.classList.remove('shake'), 400);
+    }
+}
+
+function submitScrambleWord() {
+    if (selectedLetters.length < currentScrambleWord.length) {
+        sfx.wrong();
+        showFeedback('scrambleFeedback', `⚠️ Please pick all ${currentScrambleWord.length} letters first!`, 'warning');
+        return;
+    }
+    checkScrambleSolution();
+}
+
+function skipScrambleWord() {
+    sfx.click();
+    clearInterval(scrambleTimerInterval);
+    updateGlobalStats(0, false);
+    scrambleIndex = (scrambleIndex + 1) % scrambleVocabulary.length;
+    loadScrambleWord();
+}
+
+// Physical keyboard listener for Word Scramble
+window.addEventListener('keydown', (e) => {
+    // Only handle if scramble section is visible
+    const secScramble = document.getElementById('scrambleSection');
+    if (!secScramble || !secScramble.classList.contains('active')) return;
+
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        submitScrambleWord();
+    } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (selectedLetters.length > 0) {
+            const last = selectedLetters[selectedLetters.length - 1];
+            unselectLetter(last);
+        }
+    } else {
+        const char = e.key.toUpperCase();
+        if (/^[A-Z]$/.test(char)) {
+            // Find an unused tile matching this character
+            const matchingTile = scrambledLetters.find(t => t.char === char && !t.used);
+            if (matchingTile) {
+                sfx.click();
+                selectLetter(matchingTile);
+            }
+        }
+    }
+});
+
+function showFeedback(elemId, html, type) {
+    const box = document.getElementById(elemId);
+    box.style.display = 'block';
+    box.className = 'arcade-feedback feedback-' + type;
+    box.innerHTML = html;
+}
+
+function hideFeedback(elemId) {
+    const box = document.getElementById(elemId);
+    box.style.display = 'none';
+}
+
+
+// ==========================================
+// CODE DETECTIVE CHALLENGES (EASY PYTHON LEARNING)
+// ==========================================
+const detectiveChallenges = [
+    {
+        topic: "Strings & Multiplication",
+        prompt: "What will this Python repetition code print?",
+        code: 'spell = "Echo! "\nprint(spell * 3)',
+        options: ['"Echo! Echo! Echo! "', '"Echo! * 3"', '"Echo! 3"', 'SyntaxError'],
+        answer: '"Echo! Echo! Echo! "',
+        explanation: 'Multiplying a string by 3 in Python repeats the text three times!'
+    },
+    {
+        topic: "List Indexing",
+        prompt: "Which item is printed from index [1]?",
+        code: 'inventory = ["Shield", "Sword", "Potion"]\nprint(inventory[1])',
+        options: ['"Sword"', '"Shield"', '"Potion"', 'IndexError'],
+        answer: '"Sword"',
+        explanation: 'In Python 0-based indexing: index 0 is "Shield", index 1 is "Sword"!'
+    },
+    {
+        topic: "Dictionary Lookup",
+        prompt: "What value does the key 'role' retrieve?",
+        code: 'character = {\n    "name": "Nova",\n    "role": "Mage",\n    "hp": 100\n}\nprint(character["role"])',
+        options: ['"Mage"', '"Nova"', '100', 'KeyError'],
+        answer: '"Mage"',
+        explanation: 'Accessing character["role"] directly retrieves the value "Mage"!'
+    },
+    {
+        topic: "Floor Division",
+        prompt: "What is the integer result of 250 // 4?",
+        code: 'loot = 250 // 4\nprint(loot)',
+        options: ['62', '62.5', '60', 'Error'],
+        answer: '62',
+        explanation: 'Floor division (//) discards the fractional part and returns the whole integer 62!'
+    },
+    {
+        topic: "For Loop Iteration",
+        prompt: "How many times does this loop execute?",
+        code: 'colors = ["Crimson", "Azure", "Emerald"]\nfor c in colors:\n    print(f"Theme: {c}")',
+        options: ['3 times', '2 times', '4 times', '1 time'],
+        answer: '3 times',
+        explanation: 'The list contains 3 items, so the loop body executes exactly 3 times!'
+    },
+    {
+        topic: "Negative Indexing",
+        prompt: "What does the negative index -1 access?",
+        code: 'scores = [78, 85, 92, 99]\nprint(scores[-1])',
+        options: ['99', '78', '92', 'IndexError'],
+        answer: '99',
+        explanation: 'Negative index -1 in Python accesses the last element of the list, which is 99!'
+    },
+    {
+        topic: "Conditionals",
+        prompt: "What message will this code print?",
+        code: 'score = 95\nif score >= 90:\n    grade = "Excellent"\nelse:\n    grade = "Good"\nprint(grade)',
+        options: ['Excellent', 'Good', '95', 'None'],
+        answer: 'Excellent',
+        explanation: 'Because 95 >= 90 evaluates to True, the if-block executes and prints "Excellent"!'
+    },
+    {
+        topic: "Functions & Logic",
+        prompt: "What does this power calculation function return?",
+        code: 'def double_power(x):\n    return x * 2\n\nprint(double_power(25))',
+        options: ['50', '25', '100', 'Error'],
+        answer: '50',
+        explanation: 'The function takes 25 as input, computes 25 * 2, and returns 50!'
+    },
+    {
+        topic: "Sets & Duplication",
+        prompt: "How many unique elements remain in this set?",
+        code: 'tags = {"Python", "AI", "Python", "Cloud"}\nprint(len(tags))',
+        options: ['3', '4', '2', 'Error'],
+        answer: '3',
+        explanation: 'Python sets discard duplicates automatically, leaving 3 distinct items!'
+    },
+    {
+        topic: "List Append",
+        prompt: "What is the list length after using .append()?",
+        code: 'playlist = ["Track 1", "Track 2"]\nplaylist.append("Track 3")\nprint(len(playlist))',
+        options: ['3', '2', '4', 'None'],
+        answer: '3',
+        explanation: 'Calling .append() adds "Track 3" to the end, increasing the list length to 3!'
+    }
+];
+
+let detectiveIndex = 0;
+let detectiveScore = 0;
+let detectiveAnswered = false;
+
+function loadDetectiveChallenge() {
+    detectiveAnswered = false;
+    const current = detectiveChallenges[detectiveIndex];
+
+    document.getElementById('detectiveQuestionNum').innerText = `Challenge ${detectiveIndex + 1} of ${detectiveChallenges.length}`;
+    document.getElementById('detectiveTopic').innerText = current.topic;
+    document.getElementById('detectivePrompt').innerText = current.prompt;
+    document.getElementById('detectiveSnippet').innerText = current.code;
+
+    const progressPercent = ((detectiveIndex + 1) / detectiveChallenges.length) * 100;
+    document.getElementById('detectiveProgressFill').style.width = progressPercent + '%';
+
+    const container = document.getElementById('detectiveOptions');
+    container.innerHTML = '';
+
+    current.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'detective-opt-btn';
+        btn.innerText = opt;
+        btn.onclick = () => selectDetectiveAnswer(opt, btn);
+        container.appendChild(btn);
+    });
+
+    document.getElementById('detectiveFeedback').style.display = 'none';
+    document.getElementById('detectiveGameOver').style.display = 'none';
+}
+
+function selectDetectiveAnswer(selected, buttonElem) {
+    if (detectiveAnswered) return;
+    detectiveAnswered = true;
+
+    const current = detectiveChallenges[detectiveIndex];
+    const isCorrect = selected === current.answer;
+
+    const allButtons = document.querySelectorAll('.detective-opt-btn');
+    allButtons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.innerText === current.answer) {
+            btn.classList.add('correct');
+        } else if (btn === buttonElem && !isCorrect) {
+            btn.classList.add('wrong');
+        }
+    });
+
+    const feedbackBox = document.getElementById('detectiveFeedback');
+    const feedbackText = document.getElementById('detectiveFeedbackContent');
+    feedbackBox.style.display = 'block';
+
+    if (isCorrect) {
+        sfx.correct();
+        triggerConfetti(45);
+        detectiveScore += 10;
+        updateGlobalStats(10, true);
+        feedbackBox.className = 'arcade-feedback feedback-success';
+        feedbackText.innerHTML = `<strong>🎉 Spot On! (+10 pts)</strong><br>${current.explanation}`;
+    } else {
+        sfx.wrong();
+        updateGlobalStats(0, false);
+        feedbackBox.className = 'arcade-feedback feedback-error';
+        feedbackText.innerHTML = `<strong>❌ Not quite!</strong> The correct answer was <code>${current.answer}</code>.<br>${current.explanation}`;
+    }
+}
+
+function nextDetectiveChallenge() {
+    detectiveIndex++;
+    if (detectiveIndex < detectiveChallenges.length) {
+        loadDetectiveChallenge();
+    } else {
+        showDetectiveGameOver();
+    }
+}
+
+function showDetectiveGameOver() {
+    sfx.correct();
+    triggerConfetti(80);
+    document.getElementById('detectiveFeedback').style.display = 'none';
+    document.getElementById('detectiveOptions').innerHTML = '';
+    const gameOver = document.getElementById('detectiveGameOver');
+    gameOver.style.display = 'block';
+
+    document.getElementById('detectiveFinalScore').innerText = detectiveScore;
+
+    const trophy = document.getElementById('detectiveTrophy');
+    const title = document.getElementById('detectiveEndTitle');
+    const msg = document.getElementById('detectiveEndMsg');
+
+    if (detectiveScore >= 90) {
+        trophy.innerText = '🏆';
+        title.innerText = 'Master Python Detective!';
+        msg.innerText = `Remarkable! You scored ${detectiveScore}/100. Excellent logic and Python code prediction skills!`;
+    } else if (detectiveScore >= 70) {
+        trophy.innerText = '🥈';
+        title.innerText = 'Great Code Detective!';
+        msg.innerText = `Awesome job! You scored ${detectiveScore}/100. Keep up the great Python learning!`;
+    } else {
+        trophy.innerText = '💡';
+        title.innerText = 'Python Explorer!';
+        msg.innerText = `You scored ${detectiveScore}/100. Review the 7-day curriculum and try again to improve!`;
+    }
+}
+
+function restartDetectiveGame() {
+    sfx.click();
+    detectiveIndex = 0;
+    detectiveScore = 0;
+    loadDetectiveChallenge();
+}
+
+function copySnippetCode() {
+    const code = document.getElementById('detectiveSnippet').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        sfx.click();
+        const btn = document.querySelector('.copy-code-btn');
+        btn.innerText = '✓ Copied!';
+        setTimeout(() => btn.innerText = '📋 Copy', 1500);
+    });
+}
+
+// Initial bootstrap
+loadScrambleWord();
+loadDetectiveChallenge();
+</script>
+
+</body>
+</html>

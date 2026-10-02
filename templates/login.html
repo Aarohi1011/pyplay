@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PythonPath</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav class="glass-nav">
+    <div class="logo">
+        <span class="logo-icon">🐍</span>
+        <span class="logo-text">Python<span class="highlight">Path</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="nav-item">Home</a>
+        <a href="/signup" class="nav-button">Get Started</a>
+    </div>
+</nav>
+
+<div class="auth-page">
+
+    <div class="auth-box">
+
+        <h1>Welcome Back 👋</h1>
+
+        <p>Continue your 7-day Python learning adventure.</p>
+
+        {% if error %}
+            <div class="alert-message alert-error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if success %}
+            <div class="alert-message alert-success">
+                {{ success }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+
+            <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value="{{ email or '' }}"
+                required
+            >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+            >
+
+            <button type="submit" class="primary-button">
+                Sign In &rarr;
+            </button>
+
+        </form>
+
+        <p style="text-align: center; margin-bottom: 0; font-size: 14px;">
+            Don't have an account? <a href="/signup">Create one now</a>
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day {{ day_number }}: {{ day.title }} - PythonPath</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav class="glass-nav">
+    <div class="logo">
+        <span class="logo-icon">🐍</span>
+        <span class="logo-text">Python<span class="highlight">Path</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-item">📊 Dashboard</a>
+        <a href="/game" class="nav-item">🎮 Arcade Game</a>
+        <a href="/logout" class="nav-button">Logout</a>
+    </div>
+</nav>
+
+<main class="lesson">
+
+    <div class="lesson-header">
+        <p class="small-title">
+            DAY {{ day_number }} OF {{ total_days or 7 }} &bull; CORE CURRICULUM
+        </p>
+
+        <h1>{{ day.title }}</h1>
+
+        <p class="lesson-description">
+            {{ day.description }}
+        </p>
+    </div>
+
+    <div class="lesson-content">
+        {{ day.content | safe }}
+    </div>
+
+    <div class="lesson-footer-actions">
+        <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <a href="/quiz/{{ day_number }}" class="primary-button" style="text-align: center;">
+                📝 Take Day {{ day_number }} Quiz (5 Questions) &rarr;
+            </a>
+
+            <a href="/complete/{{ day_number }}" class="secondary-button" style="text-align: center;">
+                &#10003; Mark Day Complete
+            </a>
+
+            <a href="/game" class="secondary-button" style="text-align: center; border-color: #38bdf8; color: #0284c7;">
+                🧩 Practice in Arcade Game
+            </a>
+        </div>
+
+        <div class="lesson-pagination" style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px; flex-wrap: wrap; gap: 15px;">
+            {% if day_number > 1 %}
+                <a href="/day/{{ day_number - 1 }}" class="secondary-button">
+                    &larr; Day {{ day_number - 1 }}
+                </a>
+            {% else %}
+                <span></span>
+            {% endif %}
+
+            <a href="/dashboard" style="color: var(--primary); text-decoration: none; font-weight: 700;">
+                Return to Dashboard
+            </a>
+
+            {% if day_number < (total_days or 7) %}
+                <a href="/day/{{ day_number + 1 }}" class="secondary-button">
+                    Day {{ day_number + 1 }} &rarr;
+                </a>
+            {% else %}
+                <span></span>
+            {% endif %}
+        </div>
+    </div>
+
+</main>
+
+<script>
+// Automatically add copy buttons to lesson code blocks
+document.querySelectorAll('.lesson-chunk pre').forEach((pre) => {
+    pre.style.position = 'relative';
+    const copyBtn = document.createElement('button');
+    copyBtn.innerText = '📋 Copy';
+    copyBtn.className = 'copy-code-btn';
+    copyBtn.style.position = 'absolute';
+    copyBtn.style.top = '10px';
+    copyBtn.style.right = '12px';
+    copyBtn.style.zIndex = '2';
+    copyBtn.onclick = () => {
+        const codeText = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+        navigator.clipboard.writeText(codeText).then(() => {
+            copyBtn.innerText = '✓ Copied!';
+            setTimeout(() => copyBtn.innerText = '📋 Copy', 1500);
+        });
+    };
+    pre.appendChild(copyBtn);
+});
+</script>
+
+</body>
+</html>
